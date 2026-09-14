@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
+
 from accounts.models import User
 from patients.models import Patient
 from doctors.models import Doctor
@@ -62,10 +64,23 @@ class LaboratoryResult(models.Model):
     report = models.FileField(
         upload_to="laboratory_reports/",
         blank=True,
-        null=True
+        null=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=[
+                    "pdf",
+                    "doc",
+                    "docx",
+                    "jpg",
+                    "jpeg",
+                    "png",
+                ]
+            )
+        ]
     )
 
     completed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Result for {self.laboratory_request.test_name}"
+

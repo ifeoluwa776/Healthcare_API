@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
+
 from accounts.models import User
 from departments.models import Department
 
@@ -22,10 +24,16 @@ class Doctor(models.Model):
         max_length=100,
         unique=True
     )
+
     license_file = models.FileField(
         upload_to="doctor_licenses/",
         blank=True,
-        null=True
+        null=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["pdf"]
+            )
+        ]
     )
 
     years_of_experience = models.PositiveIntegerField(
@@ -46,8 +54,14 @@ class Doctor(models.Model):
     profile_photo = models.ImageField(
         upload_to="doctor_profiles/",
         blank=True,
-        null=True
+        null=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=["jpg", "jpeg", "png"]
+            )
+        ]
     )
 
     def __str__(self):
         return f"Dr. {self.user.first_name} {self.user.last_name}"
+

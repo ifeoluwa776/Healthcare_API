@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.validators import FileExtensionValidator
+
 from patients.models import Patient
 from doctors.models import Doctor
 
@@ -24,7 +26,19 @@ class MedicalRecord(models.Model):
     attachments = models.FileField(
         upload_to="medical_record_attachments/",
         blank=True,
-        null=True
+        null=True,
+        validators=[
+            FileExtensionValidator(
+                allowed_extensions=[
+                    "pdf",
+                    "doc",
+                    "docx",
+                    "jpg",
+                    "jpeg",
+                    "png",
+                ]
+            )
+        ]
     )
 
     visit_date = models.DateTimeField(auto_now_add=True)
