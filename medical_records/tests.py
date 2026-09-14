@@ -1,5 +1,6 @@
 from django.test import TestCase
 from rest_framework.test import APIClient
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from accounts.models import User
 from patients.models import Patient
@@ -208,7 +209,42 @@ class MedicalRecordTests(TestCase):
         )
 
         self.assertEqual(len(results), 1)
+
         self.assertEqual(
             results[0]["id"],
             first_record.id,
         )
+
+    def test_doctor_can_upload_medical_record_attachment(self):
+        self.client.force_authenticate(
+            user=self.doctor_user
+        )
+
+        attachment = SimpleUploadedFile(
+            "medical_report.pdf",
+            b"Sample medical report document",
+            content_type="application/pdf",
+        )
+
+        response = self.client.post(
+            "/api/medical-records/",
+            {
+                "patient": self.patient.id,
+                "doctor": self.doctor.id,
+                "diagnosis": "Malaria",
+                "symptoms": "Fever and headache",
+                "treatment": "Medication and rest",
+                "consultation_notes": "Patient advised to rest.",
+                "attachments": attachment,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        record = MedicalRecord.objects.get(
+            patient=self.patient,
+            diagnosis="Malaria",
+        )
+
+        self.assertTrue(record.attachments)

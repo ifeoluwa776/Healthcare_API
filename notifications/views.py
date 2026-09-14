@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .models import Notification
 from .serializers import NotificationSerializer
+from .services import send_notification_email
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -10,7 +11,14 @@ class NotificationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user)
+        return Notification.objects.filter(
+            user=self.request.user
+        )
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        notification = serializer.save(
+            user=self.request.user
+        )
+
+        send_notification_email(notification)
+

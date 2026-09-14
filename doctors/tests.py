@@ -185,7 +185,6 @@ class DoctorTests(TestCase):
     def test_admin_can_upload_doctor_profile_photo(self):
         self.client.force_authenticate(user=self.admin)
 
-        # Create a real image in memory
         image = Image.new("RGB", (100, 100), color="white")
 
         image_buffer = BytesIO()
@@ -219,4 +218,35 @@ class DoctorTests(TestCase):
         )
 
         self.assertTrue(doctor.profile_photo)
+
+    def test_admin_can_upload_doctor_license(self):
+        self.client.force_authenticate(user=self.admin)
+
+        uploaded_license = SimpleUploadedFile(
+            "doctor_license.pdf",
+            b"Sample doctor license document",
+            content_type="application/pdf",
+        )
+
+        response = self.client.post(
+            "/api/doctors/",
+            {
+                "user": self.doctor_user.id,
+                "department": self.department.id,
+                "specialization": "General Medicine",
+                "license_number": "DOC-LICENSE-001",
+                "years_of_experience": 5,
+                "consultation_fee": "5000.00",
+                "license_file": uploaded_license,
+            },
+            format="multipart",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        doctor = Doctor.objects.get(
+            user=self.doctor_user
+        )
+
+        self.assertTrue(doctor.license_file)
 

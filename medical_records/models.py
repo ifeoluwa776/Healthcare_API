@@ -21,7 +21,14 @@ class MedicalRecord(models.Model):
     treatment = models.TextField()
     consultation_notes = models.TextField(blank=True)
 
+    attachments = models.FileField(
+        upload_to="medical_record_attachments/",
+        blank=True,
+        null=True
+    )
+
     visit_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.patient} - {self.diagnosis[:30]}"
+

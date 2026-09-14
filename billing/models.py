@@ -36,11 +36,12 @@ class Invoice(models.Model):
     status = models.CharField(
         max_length=20,
         choices=[
-            ("unpaid", "Unpaid"),
-            ("partial", "Partially Paid"),
+            ("pending", "Pending"),
             ("paid", "Paid"),
+            ("failed", "Failed"),
+            ("refunded", "Refunded"),
         ],
-        default="unpaid"
+        default="pending"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -89,10 +90,11 @@ class Payment(models.Model):
         max_length=20,
         choices=[
             ("pending", "Pending"),
-            ("completed", "Completed"),
+            ("paid", "Paid"),
             ("failed", "Failed"),
+            ("refunded", "Refunded"),
         ],
-        default="completed"
+        default="paid"
     )
 
     transaction_id = models.CharField(

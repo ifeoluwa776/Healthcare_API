@@ -20,6 +20,7 @@ The Healthcare Management System enables hospitals, clinics, and healthcare prov
 * Prescription management
 * Laboratory requests and results
 * Billing and payments
+* Payment receipt generation
 * Notifications
 * Doctor reviews and ratings
 * Admin analytics
@@ -107,6 +108,7 @@ OpenAPI schema:
 
 * `/api/billing/invoices/`
 * `/api/billing/payments/`
+* `/api/billing/payments/{payment_id}/receipt/`
 
 ### Notifications
 
@@ -173,7 +175,7 @@ Run the complete test suite with:
 python manage.py test
 ```
 
-The current test suite contains **48 automated tests**, covering authentication, permissions, CRUD operations, appointments, patients, doctors, medical records, prescriptions, laboratory services, billing, notifications, reviews, search/filtering, and file uploads.
+The current test suite contains **56 automated tests**, covering authentication, permissions, CRUD operations, appointments, patients, doctors, medical records, prescriptions, laboratory services, billing, notifications, reviews, search/filtering, analytics, and file uploads.
 
 ## API Testing
 
@@ -186,7 +188,7 @@ Swagger:
 
 `http://127.0.0.1:8000/api/docs/`
 
-The Postman collection is included with the project.
+A Postman collection is also available for testing the API endpoints.
 
 ## Database
 
@@ -222,7 +224,7 @@ The refresh endpoint can be used to obtain a new access token when required.
 
 ## File Uploads
 
-Doctor profile photos can be uploaded through the Doctor API.
+Doctor profile photos and laboratory reports can be uploaded through the relevant APIs.
 
 Uploaded media files are served during development using Django's media configuration.
 
@@ -240,4 +242,4 @@ The project includes:
 
 ## Project Status
 
-The Healthcare Management System API has been implemented with authentication, role-based permissions, healthcare management modules, API documentation, file upload support, search/filtering, and automated testing.
+The Healthcare Management System API has been implemented with authentication, role-based permissions, healthcare management modules, API documentation, file upload support, search/filtering, analytics, and automated testing.

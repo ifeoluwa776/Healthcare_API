@@ -22,6 +22,11 @@ class Doctor(models.Model):
         max_length=100,
         unique=True
     )
+    license_file = models.FileField(
+        upload_to="doctor_licenses/",
+        blank=True,
+        null=True
+    )
 
     years_of_experience = models.PositiveIntegerField(
         default=0

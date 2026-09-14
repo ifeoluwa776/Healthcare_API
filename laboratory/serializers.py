@@ -1,8 +1,10 @@
 from rest_framework import serializers
+
 from .models import LaboratoryRequest, LaboratoryResult
 
 
 class LaboratoryRequestSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = LaboratoryRequest
         fields = [
@@ -18,6 +20,7 @@ class LaboratoryRequestSerializer(serializers.ModelSerializer):
 
 
 class LaboratoryResultSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = LaboratoryResult
         fields = [
@@ -25,6 +28,7 @@ class LaboratoryResultSerializer(serializers.ModelSerializer):
             "laboratory_request",
             "result",
             "notes",
+            "report",
             "completed_at",
         ]
         read_only_fields = ["id", "completed_at"]

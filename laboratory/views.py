@@ -1,6 +1,9 @@
+from django.http import FileResponse
+
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.decorators import action
 
 from .models import LaboratoryRequest, LaboratoryResult
 from .serializers import (
@@ -20,13 +23,19 @@ class LaboratoryRequestViewSet(viewsets.ModelViewSet):
             return LaboratoryRequest.objects.all()
 
         if user.role == "doctor":
-            return LaboratoryRequest.objects.filter(doctor__user=user)
+            return LaboratoryRequest.objects.filter(
+                doctor__user=user
+            )
 
         if user.role == "patient":
-            return LaboratoryRequest.objects.filter(patient__user=user)
+            return LaboratoryRequest.objects.filter(
+                patient__user=user
+            )
 
         if user.role == "lab_technician":
-            return LaboratoryRequest.objects.all()
+            return LaboratoryRequest.objects.filter(
+                laboratory_technician=user
+            )
 
         return LaboratoryRequest.objects.none()
 
@@ -60,7 +69,9 @@ class LaboratoryResultViewSet(viewsets.ModelViewSet):
             )
 
         if user.role == "lab_technician":
-            return LaboratoryResult.objects.all()
+            return LaboratoryResult.objects.filter(
+                laboratory_request__laboratory_technician=user
+            )
 
         return LaboratoryResult.objects.none()
 
@@ -70,5 +81,36 @@ class LaboratoryResultViewSet(viewsets.ModelViewSet):
                 "Only administrators or laboratory technicians can create laboratory results."
             )
 
+        laboratory_request = serializer.validated_data[
+            "laboratory_request"
+        ]
+
+        if self.request.user.role == "lab_technician":
+            if laboratory_request.laboratory_technician != self.request.user:
+                raise PermissionDenied(
+                    "You are not assigned to this laboratory request."
+                )
+
         serializer.save()
+
+    @action(
+        detail=True,
+        methods=["get"],
+        url_path="download",
+    )
+    def download(self, request, pk=None):
+        laboratory_result = self.get_object()
+
+        if not laboratory_result.report:
+            return PermissionDenied(
+                "No laboratory report is available for download."
+            )
+
+        response = FileResponse(
+            laboratory_result.report.open("rb"),
+            as_attachment=True,
+            filename=laboratory_result.report.name.split("/")[-1],
+        )
+
+        return response
 

@@ -166,6 +166,7 @@ class PrescriptionTests(TestCase):
             "/api/prescriptions/",
             {
                 "medical_record": self.medical_record.id,
+                "doctor": self.doctor.id,
                 "medication_name": "Paracetamol",
                 "dosage": "500mg",
                 "instructions": "Take twice daily.",
@@ -174,3 +175,36 @@ class PrescriptionTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    def test_patient_can_download_their_prescription(self):
+        prescription = Prescription.objects.create(
+            medical_record=self.medical_record,
+            medication_name="Paracetamol",
+            dosage="500mg",
+            instructions="Take twice daily.",
+        )
+
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
+
+        response = self.client.get(
+            f"/api/prescriptions/{prescription.id}/download/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response["Content-Type"],
+            "text/plain",
+        )
+
+        self.assertIn(
+            "attachment;",
+            response["Content-Disposition"],
+        )
+
+        self.assertIn(
+            "Paracetamol",
+            response.content.decode(),
+        )

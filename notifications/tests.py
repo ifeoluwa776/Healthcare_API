@@ -1,10 +1,14 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.core import mail
 from rest_framework.test import APIClient
 
 from accounts.models import User
 from notifications.models import Notification
 
 
+@override_settings(
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
+)
 class NotificationTests(TestCase):
 
     def setUp(self):
@@ -40,6 +44,7 @@ class NotificationTests(TestCase):
 
     def test_unauthenticated_user_cannot_access_notifications(self):
         response = self.client.get("/api/notifications/")
+
         self.assertEqual(response.status_code, 401)
 
     def test_user_can_see_only_their_notifications(self):
@@ -56,7 +61,11 @@ class NotificationTests(TestCase):
         )
 
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["user"], self.user.id)
+
+        self.assertEqual(
+            results[0]["user"],
+            self.user.id
+        )
 
     def test_user_can_create_notification(self):
         self.client.force_authenticate(user=self.user)
@@ -100,4 +109,45 @@ class NotificationTests(TestCase):
             title="Attempted Notification"
         )
 
-        self.assertEqual(notification.user, self.user)
+        self.assertEqual(
+            notification.user,
+            self.user
+        )
+
+    def test_notification_sends_email(self):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.post(
+            "/api/notifications/",
+            {
+                "title": "Appointment Reminder",
+                "message": "Your appointment is tomorrow.",
+                "notification_type": "appointment",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        self.assertEqual(
+            len(mail.outbox),
+            1
+        )
+
+        email = mail.outbox[0]
+
+        self.assertEqual(
+            email.subject,
+            "Appointment Reminder"
+        )
+
+        self.assertEqual(
+            email.to,
+            ["user@test.com"]
+        )
+
+        self.assertIn(
+            "Your appointment is tomorrow.",
+            email.body
+        )
+

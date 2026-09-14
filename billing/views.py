@@ -1,3 +1,5 @@
+from django.http import HttpResponse
+
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
@@ -66,3 +68,56 @@ class PaymentListCreateView(generics.ListCreateAPIView):
 
         serializer.save(patient=invoice.patient)
 
+
+class PaymentReceiptView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, payment_id):
+        try:
+            payment = Payment.objects.select_related(
+                "invoice",
+                "patient"
+            ).get(id=payment_id)
+        except Payment.DoesNotExist:
+            return HttpResponse(
+                "Payment not found.",
+                status=404
+            )
+
+        user = request.user
+
+        if user.role != "admin":
+            if user.role != "patient" or payment.patient.user != user:
+                raise PermissionDenied(
+                    "You can only access your own payment receipt."
+                )
+
+        receipt = f"""
+HEALTHCARE MANAGEMENT SYSTEM
+PAYMENT RECEIPT
+==============================
+
+Receipt Number: {payment.id}
+Invoice Number: {payment.invoice.id}
+Patient ID: {payment.patient.id}
+
+Amount Paid: {payment.amount}
+Payment Method: {payment.get_payment_method_display()}
+Payment Status: {payment.get_status_display()}
+Transaction ID: {payment.transaction_id or "N/A"}
+Payment Date: {payment.paid_at}
+
+==============================
+Thank you for your payment.
+"""
+
+        response = HttpResponse(
+            receipt.strip(),
+            content_type="text/plain"
+        )
+
+        response["Content-Disposition"] = (
+            f'attachment; filename="payment_receipt_{payment.id}.txt"'
+        )
+
+        return response

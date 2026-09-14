@@ -121,7 +121,36 @@ class PatientTests(TestCase):
         )
 
         self.assertEqual(len(results), 1)
+
         self.assertEqual(
             results[0]["user"],
             self.second_patient_user.id,
         )
+
+    def test_admin_can_create_patient_with_genotype(self):
+        self.client.force_authenticate(user=self.admin)
+
+        response = self.client.post(
+            "/api/patients/",
+            {
+                "user": self.patient_user.id,
+                "date_of_birth": "2000-01-01",
+                "gender": "Male",
+                "blood_group": "O+",
+                "genotype": "AS",
+                "address": "Lagos",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 201)
+
+        patient = Patient.objects.get(
+            user=self.patient_user
+        )
+
+        self.assertEqual(
+            patient.genotype,
+            "AS"
+        )
+

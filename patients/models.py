@@ -12,11 +12,19 @@ class Patient(models.Model):
         ("A+", "A+"),
         ("A-", "A-"),
         ("B+", "B+"),
-        ("B-", "B-"),
+        ("B-", "B+"),
         ("AB+", "AB+"),
         ("AB-", "AB-"),
         ("O+", "O+"),
         ("O-", "O-"),
+    ]
+
+    GENOTYPE_CHOICES = [
+        ("AA", "AA"),
+        ("AS", "AS"),
+        ("SS", "SS"),
+        ("AC", "AC"),
+        ("SC", "SC"),
     ]
 
     user = models.OneToOneField(
@@ -35,6 +43,12 @@ class Patient(models.Model):
     blood_group = models.CharField(
         max_length=5,
         choices=BLOOD_GROUP_CHOICES
+    )
+
+    genotype = models.CharField(
+        max_length=2,
+        choices=GENOTYPE_CHOICES,
+        blank=True
     )
 
     address = models.TextField()
@@ -59,3 +73,4 @@ class Patient(models.Model):
 
     def __str__(self):
         return self.user.email
+

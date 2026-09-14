@@ -1,4 +1,5 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.core import mail
 from rest_framework.test import APIClient
 from django.utils import timezone
 from datetime import timedelta
@@ -10,6 +11,9 @@ from departments.models import Department
 from appointments.models import Appointment
 
 
+@override_settings(
+    EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
+)
 class AppointmentTests(TestCase):
 
     def setUp(self):
@@ -52,12 +56,16 @@ class AppointmentTests(TestCase):
         )
 
     def test_unauthenticated_user_cannot_access_appointments(self):
-        response = self.client.get("/api/appointments/")
+        response = self.client.get(
+            "/api/appointments/"
+        )
 
         self.assertEqual(response.status_code, 401)
 
     def test_patient_can_create_appointment(self):
-        self.client.force_authenticate(user=self.patient_user)
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
 
         response = self.client.post(
             "/api/appointments/",
@@ -73,10 +81,15 @@ class AppointmentTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(Appointment.objects.count(), 1)
+        self.assertEqual(
+            Appointment.objects.count(),
+            1
+        )
 
     def test_appointment_cannot_be_booked_in_the_past(self):
-        self.client.force_authenticate(user=self.patient_user)
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
 
         response = self.client.post(
             "/api/appointments/",
@@ -103,9 +116,13 @@ class AppointmentTests(TestCase):
             reason="Routine check-up",
         )
 
-        self.client.force_authenticate(user=self.patient_user)
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
 
-        response = self.client.get("/api/appointments/")
+        response = self.client.get(
+            "/api/appointments/"
+        )
 
         self.assertEqual(response.status_code, 200)
 
@@ -115,8 +132,58 @@ class AppointmentTests(TestCase):
             else response.data
         )
 
-        self.assertEqual(len(results), 1)
+        self.assertEqual(
+            len(results),
+            1
+        )
+
         self.assertEqual(
             results[0]["id"],
             appointment.id,
         )
+
+    def test_patient_can_receive_appointment_reminder(self):
+        appointment = Appointment.objects.create(
+            patient=self.patient,
+            doctor=self.doctor,
+            appointment_date=(
+                timezone.now() + timedelta(days=2)
+            ),
+            reason="Routine check-up",
+        )
+
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
+
+        response = self.client.post(
+            f"/api/appointments/{appointment.id}/remind/"
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200
+        )
+
+        self.assertEqual(
+            len(mail.outbox),
+            1
+        )
+
+        email = mail.outbox[0]
+
+        self.assertEqual(
+            email.to,
+            ["patient@example.com"]
+        )
+
+        self.assertEqual(
+            email.subject,
+            "Appointment Reminder"
+        )
+
+        self.assertIn(
+            "appointment",
+            email.body.lower()
+        )
+

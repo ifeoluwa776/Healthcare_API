@@ -62,17 +62,22 @@ class BillingTests(TestCase):
             medication_charges=500,
         )
 
+        self.payment = Payment.objects.create(
+            invoice=self.invoice,
+            patient=self.patient,
+            amount=5000,
+            payment_method="cash",
+            status="paid",
+        )
+
     def test_unauthenticated_user_cannot_access_invoices(self):
         response = self.client.get(
             "/api/billing/invoices/"
         )
-
         self.assertEqual(response.status_code, 401)
 
     def test_admin_can_create_invoice(self):
-        self.client.force_authenticate(
-            user=self.admin
-        )
+        self.client.force_authenticate(user=self.admin)
 
         response = self.client.post(
             "/api/billing/invoices/",
@@ -89,15 +94,10 @@ class BillingTests(TestCase):
 
         invoice = Invoice.objects.order_by("-id").first()
 
-        self.assertEqual(
-            invoice.total_amount,
-            8000
-        )
+        self.assertEqual(invoice.total_amount, 8000)
 
     def test_patient_cannot_create_invoice(self):
-        self.client.force_authenticate(
-            user=self.patient_user
-        )
+        self.client.force_authenticate(user=self.patient_user)
 
         response = self.client.post(
             "/api/billing/invoices/",
@@ -113,9 +113,7 @@ class BillingTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     def test_patient_can_only_see_their_own_invoices(self):
-        self.client.force_authenticate(
-            user=self.patient_user
-        )
+        self.client.force_authenticate(user=self.patient_user)
 
         response = self.client.get(
             "/api/billing/invoices/"
@@ -130,16 +128,13 @@ class BillingTests(TestCase):
         )
 
         self.assertEqual(len(results), 1)
-
         self.assertEqual(
             results[0]["patient"],
             self.patient.id
         )
 
     def test_patient_can_make_payment_for_own_invoice(self):
-        self.client.force_authenticate(
-            user=self.patient_user
-        )
+        self.client.force_authenticate(user=self.patient_user)
 
         response = self.client.post(
             "/api/billing/payments/",
@@ -147,7 +142,7 @@ class BillingTests(TestCase):
                 "invoice": self.invoice.id,
                 "amount": 5000,
                 "payment_method": "cash",
-                "status": "completed",
+                "status": "paid",
             },
             format="json",
         )
@@ -163,9 +158,7 @@ class BillingTests(TestCase):
         )
 
     def test_patient_cannot_pay_other_patients_invoice(self):
-        self.client.force_authenticate(
-            user=self.patient_user
-        )
+        self.client.force_authenticate(user=self.patient_user)
 
         response = self.client.post(
             "/api/billing/payments/",
@@ -173,9 +166,47 @@ class BillingTests(TestCase):
                 "invoice": self.other_invoice.id,
                 "amount": 3000,
                 "payment_method": "cash",
-                "status": "completed",
+                "status": "paid",
             },
             format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_patient_can_generate_own_payment_receipt(self):
+        self.client.force_authenticate(user=self.patient_user)
+
+        response = self.client.get(
+            f"/api/billing/payments/{self.payment.id}/receipt/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response["Content-Type"],
+            "text/plain"
+        )
+        self.assertIn(
+            "PAYMENT RECEIPT",
+            response.content.decode()
+        )
+        self.assertIn(
+            "5000.00",
+            response.content.decode()
+        )
+
+    def test_patient_cannot_generate_other_patient_receipt(self):
+        other_payment = Payment.objects.create(
+            invoice=self.other_invoice,
+            patient=self.other_patient,
+            amount=3000,
+            payment_method="cash",
+            status="paid",
+        )
+
+        self.client.force_authenticate(user=self.patient_user)
+
+        response = self.client.get(
+            f"/api/billing/payments/{other_payment.id}/receipt/"
         )
 
         self.assertEqual(response.status_code, 403)

@@ -1,0 +1,105 @@
+{
+  "info": {
+    "_postman_id": "d6f9b9b2-41ea-4200-874b-91c8b74f2b72",
+    "name": "Healthcare Management System API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "55919408"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "List Department",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": ""
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patients",
+      "item": []
+    },
+    {
+      "name": "Doctors",
+      "item": []
+    },
+    {
+      "name": "Appointments",
+      "item": []
+    },
+    {
+      "name": "Medical Records",
+      "item": []
+    },
+    {
+      "name": "Prescriptions",
+      "item": []
+    },
+    {
+      "name": "Laboratory",
+      "item": [
+        {
+          "name": "Billing",
+          "item": []
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": []
+    },
+    {
+      "name": "Reviews",
+      "item": []
+    },
+    {
+      "name": "Analytics",
+      "item": []
+    }
+  ]
+}

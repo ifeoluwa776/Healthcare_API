@@ -87,10 +87,13 @@ class ReviewTests(TestCase):
 
     def test_unauthenticated_user_cannot_access_reviews(self):
         response = self.client.get("/api/reviews/")
+
         self.assertEqual(response.status_code, 401)
 
     def test_patient_can_only_see_their_own_reviews(self):
-        self.client.force_authenticate(user=self.patient_user)
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
 
         response = self.client.get("/api/reviews/")
 
@@ -103,10 +106,16 @@ class ReviewTests(TestCase):
         )
 
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]["patient"], self.patient.id)
+
+        self.assertEqual(
+            results[0]["patient"],
+            self.patient.id
+        )
 
     def test_patient_can_create_review(self):
-        self.client.force_authenticate(user=self.patient_user)
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
 
         response = self.client.post(
             "/api/reviews/",
@@ -130,7 +139,9 @@ class ReviewTests(TestCase):
         )
 
     def test_non_patient_cannot_create_review(self):
-        self.client.force_authenticate(user=self.doctor_user)
+        self.client.force_authenticate(
+            user=self.doctor_user
+        )
 
         response = self.client.post(
             "/api/reviews/",
@@ -143,3 +154,29 @@ class ReviewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 403)
+
+    def test_average_doctor_rating(self):
+        self.client.force_authenticate(
+            user=self.patient_user
+        )
+
+        response = self.client.get(
+            f"/api/reviews/doctor/{self.doctor.id}/average-rating/"
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.data["doctor"],
+            self.doctor.id
+        )
+
+        self.assertEqual(
+            response.data["average_rating"],
+            4.5
+        )
+
+        self.assertEqual(
+            response.data["total_reviews"],
+            2
+        )
